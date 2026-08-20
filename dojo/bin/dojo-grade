@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# YetiLink CLI Dojo — Exercise Grader Runner (dojo-grade)
+# Must run as root (whitelisted in sudoers for student)
+set -euo pipefail
+
+# Sourcing common libraries
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(cd "${SCRIPT_DIR}/../lib" && pwd)"
+# shellcheck source=/dev/null
+source "${LIB_DIR}/common.sh"
+
+if [[ $# -ne 1 ]]; then
+    die "Usage: dojo-grade <NN>"
+fi
+
+RAW_ID="$1"
+if [[ ! "$RAW_ID" =~ ^[0-9]{2}$ ]]; then
+    die "Invalid exercise ID format: '$RAW_ID'. Must be exactly two digits (00-20)."
+fi
+
+EX_ID="$RAW_ID"
+EX_DIR="$(get_exercise_dir "$EX_ID")"
+GRADE_BATS="${EX_DIR}/grade.bats"
+
+if [[ ! -f "$GRADE_BATS" ]]; then
+    die "Grader file not found: ${GRADE_BATS}"
+fi
+
+# Ensure bats binary is resolvable
+BATS_BIN="bats"
+if ! command -v bats >/dev/null 2>&1; then
+    if [[ -x /opt/bats/bats-core/bin/bats ]]; then
+        BATS_BIN="/opt/bats/bats-core/bin/bats"
+    else
+        die "bats binary not found in PATH or /opt/bats/bats-core/bin/bats"
+    fi
+fi
+
+# Increment attempts count
+update_progress "$EX_ID" '.attempts = ((.attempts // 0) + 1)'
+
+# Run BATS tests
+set +e
+"$BATS_BIN" "$GRADE_BATS"
+GRADE_EXIT=$?
+set -e
+
+if [[ $GRADE_EXIT -eq 0 ]]; then
+    TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    update_progress "$EX_ID" ".status = \"passed\" | .passed_at = \"${TIMESTAMP}\""
+    echo ""
+    echo -e "${C_BOLD}${C_GREEN}======================================================${C_RESET}"
+    echo -e "${C_BOLD}${C_GREEN} 🎉 Ticket ${EX_ID} passed! Outstanding work, Engineer!${C_RESET}"
+    echo -e "${C_BOLD}${C_GREEN}======================================================${C_RESET}"
+else
+    echo ""
+    echo -e "${C_BOLD}${C_YELLOW}======================================================${C_RESET}"
+    echo -e "${C_BOLD}${C_YELLOW} ⚠ Ticket ${EX_ID} has failing checks. Review the rubric above.${C_RESET}"
+    echo -e "${C_BOLD}${C_YELLOW} Need a hint? Run: dojo hint ${EX_ID}${C_RESET}"
+    echo -e "${C_BOLD}${C_YELLOW}======================================================${C_RESET}"
+fi
+
+exit $GRADE_EXIT

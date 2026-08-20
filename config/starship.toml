@@ -1,0 +1,31 @@
+# Starship configuration for YetiLink CLI Dojo
+add_newline = false
+
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_status\
+$character"""
+
+[directory]
+style = "bold cyan"
+truncation_length = 4
+truncate_to_repo = false
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[hostname]
+ssh_only = false
+format = "[$hostname](bold yellow) "
+disabled = false
+
+[username]
+show_always = false
+format = "[$user](bold blue)@"
+
+[cmd_duration]
+disabled = true

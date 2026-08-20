@@ -1,0 +1,400 @@
+#!/usr/bin/env bash
+# YetiLink CLI Dojo — Student CLI (/opt/dojo/bin/dojo)
+set -euo pipefail
+
+# Sourcing common libraries
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+LIB_DIR="$(cd "${SCRIPT_DIR}/../lib" && pwd)"
+# shellcheck source=/dev/null
+source "${LIB_DIR}/common.sh"
+
+render_markdown() {
+    local file="$1"
+    if command -v glow >/dev/null 2>&1; then
+        if [[ -t 1 ]]; then
+            glow -p "$file" || glow "$file" || cat "$file"
+        else
+            glow "$file" || cat "$file"
+        fi
+    else
+        if [[ -t 1 ]] && command -v less >/dev/null 2>&1; then
+            less -R "$file"
+        else
+            cat "$file"
+        fi
+    fi
+}
+
+render_markdown_string() {
+    local content="$1"
+    if command -v glow >/dev/null 2>&1; then
+        if [[ -t 1 ]]; then
+            echo "$content" | glow -p || echo "$content" | glow || echo "$content"
+        else
+            echo "$content" | glow || echo "$content"
+        fi
+    else
+        echo "$content"
+    fi
+}
+
+usage() {
+    cat << 'EOF'
+YetiLink CLI Dojo — Student Command Line Interface
+
+Usage:
+  dojo list                List all tickets in your queue grouped by tier
+  dojo start <NN>          Start a ticket, generate workdir, and view instructions
+  dojo check <NN>          Grade your work for a ticket
+  dojo hint <NN>           Reveal progressive hints (1-3) for a ticket
+  dojo solution <NN>       View the complete reference solution
+  dojo reset <NN>          Reset a ticket's workdir with fresh data
+  dojo progress            View overall bootcamp completion statistics
+  dojo cheat [topic]       Open the quick reference cheatsheet
+
+Examples:
+  dojo list
+  dojo start 00
+  dojo check 00
+  dojo hint 06
+  dojo cheat grep
+EOF
+}
+
+cmd_list() {
+    init_progress_file
+
+    local exercises_meta=(
+        "00:orientation:Tier 0 — Orientation:Welcome to YetiLink"
+        "01:navigation:Tier 1 — Survival:The Scavenger Hunt"
+        "02:file-ops:Tier 1 — Survival:The Great Shared-Drive Cleanup"
+        "03:viewing:Tier 1 — Survival:The 400 MB Router Log"
+        "04:help:Tier 1 — Survival:RTFM, Respectfully"
+        "05:find:Tier 2 — Interview Core:Disk Janitor"
+        "06:grep:Tier 2 — Interview Core:The Rogue Resolver"
+        "07:pipes:Tier 2 — Interview Core:Streams, Split and Tamed"
+        "08:permissions:Tier 2 — Interview Core:The Billing Drop-Box"
+        "09:processes:Tier 2 — Interview Core:The Zombie Cron of Building B"
+        "10:columns:Tier 3 — Text Processing:Top Talkers"
+        "11:sed:Tier 3 — Text Processing:The Datacenter Move"
+        "12:awk:Tier 3 — Text Processing:The Latency Ledger"
+        "13:log-capstone:Tier 3 — Text Processing:The 3 AM Access Log"
+        "14:archives:Tier 4 — DevOps Flavor:Restore From the Vault"
+        "15:curl-jq:Tier 4 — DevOps Flavor:Talking to the Customer API"
+        "16:env-path:Tier 4 — DevOps Flavor:The Missing Deploy Tool"
+        "17:users-groups:Tier 4 — DevOps Flavor:The Account Audit"
+        "18:networking:Tier 4 — DevOps Flavor:Who's Listening?"
+        "19:disk:Tier 4 — DevOps Flavor:The 92% Root Partition"
+        "20:finale:Finale:The Pager Goes Off"
+    )
+
+    echo ""
+    echo -e "${C_BOLD}${C_CYAN}📋 YetiLink Engineering Ticket Queue${C_RESET}"
+    echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+
+    local current_tier=""
+    for item in "${exercises_meta[@]}"; do
+        IFS=":" read -r id _slug tier title <<< "$item"
+        
+        if [[ "$tier" != "$current_tier" ]]; then
+            current_tier="$tier"
+            echo ""
+            echo -e "${C_BOLD}${C_MAGENTA}${current_tier}${C_RESET}"
+        fi
+
+        local status
+        status=$(jq -r ".exercises[\"${id}\"].status // \"not_started\"" "$PROGRESS_FILE" 2>/dev/null || echo "not_started")
+        local hints
+        hints=$(jq -r ".exercises[\"${id}\"].hints // 0" "$PROGRESS_FILE" 2>/dev/null || echo "0")
+
+        local status_badge
+        if [[ "$status" == "passed" ]]; then
+            status_badge="${C_GREEN}✅ done       ${C_RESET}"
+        elif [[ "$status" == "started" ]]; then
+            status_badge="${C_YELLOW}🟡 started    ${C_RESET}"
+        else
+            status_badge="${C_MUTED}—  not started${C_RESET}"
+        fi
+
+        local hint_badge=""
+        if [[ "$hints" -gt 0 ]]; then
+            hint_badge="${C_CYAN}💡 ${hints}/3 hints${C_RESET}"
+        else
+            hint_badge="${C_MUTED}—${C_RESET}"
+        fi
+
+        printf "  %b  ${C_BOLD}%s${C_RESET} · %-32s %b\n" "$status_badge" "$id" "$title" "$hint_badge"
+    done
+
+    echo ""
+    echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+    echo -e "Run ${C_BOLD}dojo start <NN>${C_RESET} to begin or inspect any ticket."
+    echo ""
+}
+
+cmd_start() {
+    local raw_id="${1:-}"
+    [[ -n "$raw_id" ]] || die "Usage: dojo start <NN>"
+    local ex_id
+    ex_id=$(normalize_ex_id "$raw_id") || die "Invalid exercise ID: $raw_id"
+    local ex_dir
+    ex_dir=$(get_exercise_dir "$ex_id")
+    local ex_slug
+    ex_slug=$(basename "$ex_dir")
+
+    # Run sudo dojo-setup
+    sudo /opt/dojo/bin/dojo-setup "$ex_id"
+
+    # Render README
+    local readme="${ex_dir}/README.md"
+    if [[ -f "$readme" ]]; then
+        render_markdown "$readme"
+    fi
+
+    echo ""
+    echo -e "${C_BOLD}${C_GREEN}🚀 Ticket ${ex_id} started!${C_RESET}"
+    echo -e "Your workspace is ready at: ${C_CYAN}~/dojo/${ex_slug}/${C_RESET}"
+    echo -e "Run ${C_BOLD}cd ~/dojo/${ex_slug}${C_RESET} to begin."
+    echo -e "When finished, grade your work with: ${C_BOLD}dojo check ${ex_id}${C_RESET}"
+    echo ""
+}
+
+cmd_check() {
+    local raw_id="${1:-}"
+    [[ -n "$raw_id" ]] || die "Usage: dojo check <NN>"
+    local ex_id
+    ex_id=$(normalize_ex_id "$raw_id") || die "Invalid exercise ID: $raw_id"
+
+    sudo /opt/dojo/bin/dojo-grade "$ex_id"
+}
+
+cmd_hint() {
+    local raw_id="${1:-}"
+    [[ -n "$raw_id" ]] || die "Usage: dojo hint <NN>"
+    local ex_id
+    ex_id=$(normalize_ex_id "$raw_id") || die "Invalid exercise ID: $raw_id"
+    local ex_dir
+    ex_dir=$(get_exercise_dir "$ex_id")
+
+    init_progress_file
+    local current_hints
+    current_hints=$(jq -r ".exercises[\"${ex_id}\"].hints // 0" "$PROGRESS_FILE" 2>/dev/null || echo "0")
+    local next_hint=$((current_hints + 1))
+
+    if [[ $next_hint -gt 3 ]]; then
+        next_hint=3
+    fi
+
+    local hint_file="${ex_dir}/hints/${next_hint}.md"
+    if [[ ! -f "$hint_file" ]]; then
+        echo -e "${C_YELLOW}No hint file found at ${hint_file}${C_RESET}"
+        return
+    fi
+
+    # Update hints count in progress
+    update_progress "$ex_id" ".hints = (if ((.hints // 0) < ${next_hint}) then ${next_hint} else (.hints // 0) end)"
+
+    echo ""
+    echo -e "${C_BOLD}${C_CYAN}💡 Ticket ${ex_id} — Hint ${next_hint} of 3${C_RESET}"
+    echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+    render_markdown "$hint_file"
+    echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+    if [[ $next_hint -lt 3 ]]; then
+        echo -e "Need another hint? Run: ${C_BOLD}dojo hint ${ex_id}${C_RESET}"
+    else
+        echo -e "All 3 hints revealed. Stuck? Run: ${C_BOLD}dojo solution ${ex_id}${C_RESET}"
+    fi
+    echo ""
+}
+
+cmd_solution() {
+    local raw_id="${1:-}"
+    [[ -n "$raw_id" ]] || die "Usage: dojo solution <NN>"
+    local ex_id
+    ex_id=$(normalize_ex_id "$raw_id") || die "Invalid exercise ID: $raw_id"
+    local ex_dir
+    ex_dir=$(get_exercise_dir "$ex_id")
+    local readme="${ex_dir}/README.md"
+
+    if [[ ! -f "$readme" ]]; then
+        die "README not found for ticket ${ex_id}"
+    fi
+
+    read -r -p "Show the full solution for ticket ${ex_id}? [y/N] " response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            # Extract content after <details> tag
+            local solution_content
+            solution_content=$(awk '/<details>/ {flag=1; next} /<\/details>/ {flag=0} flag' "$readme" | sed 's/<summary>.*<\/summary>//g')
+            
+            if [[ -z "$solution_content" ]]; then
+                solution_content="No solution section found in ticket README."
+            fi
+
+            update_progress "$ex_id" '.solution_viewed = true'
+
+            echo ""
+            echo -e "${C_BOLD}${C_YELLOW}🔓 Ticket ${ex_id} Reference Solution${C_RESET}"
+            echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+            render_markdown_string "$solution_content"
+            echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+            ;;
+        *)
+            echo "Cancelled. Good luck working through it!"
+            ;;
+    esac
+}
+
+cmd_reset() {
+    local raw_id="${1:-}"
+    [[ -n "$raw_id" ]] || die "Usage: dojo reset <NN>"
+    local ex_id
+    ex_id=$(normalize_ex_id "$raw_id") || die "Invalid exercise ID: $raw_id"
+    local ex_dir
+    ex_dir=$(get_exercise_dir "$ex_id")
+    local ex_slug
+    ex_slug=$(basename "$ex_dir")
+
+    read -r -p "Are you sure you want to reset ticket ${ex_id}? This will regenerate ~/dojo/${ex_slug} with fresh data. [y/N] " response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            sudo /opt/dojo/bin/dojo-setup "$ex_id"
+            update_progress "$ex_id" '.status = "started"'
+            echo ""
+            echo -e "${C_BOLD}${C_GREEN}✓ Ticket ${ex_id} has been reset with a fresh seed!${C_RESET}"
+            echo -e "Workdir ready at: ${C_CYAN}~/dojo/${ex_slug}/${C_RESET}"
+            echo ""
+            ;;
+        *)
+            echo "Reset cancelled."
+            ;;
+    esac
+}
+
+cmd_progress() {
+    init_progress_file
+    local total=21
+    local passed=0
+    local started=0
+    local total_hints=0
+    local total_attempts=0
+
+    for ((i = 0; i < total; i++)); do
+        local id
+        id=$(printf "%02d" "$i")
+        local st
+        st=$(jq -r ".exercises[\"${id}\"].status // \"not_started\"" "$PROGRESS_FILE" 2>/dev/null || echo "not_started")
+        local h
+        h=$(jq -r ".exercises[\"${id}\"].hints // 0" "$PROGRESS_FILE" 2>/dev/null || echo "0")
+        local a
+        a=$(jq -r ".exercises[\"${id}\"].attempts // 0" "$PROGRESS_FILE" 2>/dev/null || echo "0")
+
+        total_hints=$((total_hints + h))
+        total_attempts=$((total_attempts + a))
+
+        if [[ "$st" == "passed" ]]; then
+            passed=$((passed + 1))
+        elif [[ "$st" == "started" ]]; then
+            started=$((started + 1))
+        fi
+    done
+
+    local pct=$(( (passed * 100) / total ))
+    local bar_len=30
+    local filled_len=$(( (pct * bar_len) / 100 ))
+    local empty_len=$(( bar_len - filled_len ))
+
+    local bar=""
+    for ((i = 0; i < filled_len; i++)); do bar="${bar}█"; done
+    for ((i = 0; i < empty_len; i++)); do bar="${bar}░"; done
+
+    echo ""
+    echo -e "${C_BOLD}${C_CYAN}📊 YetiLink CLI Dojo — Progress Summary${C_RESET}"
+    echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+    printf "  Progress:      [${C_GREEN}%s${C_RESET}] ${C_BOLD}%d%% (%d/%d tickets completed)${C_RESET}\n" "$bar" "$pct" "$passed" "$total"
+    printf "  Active:        ${C_YELLOW}%d tickets in progress${C_RESET}\n" "$started"
+    printf "  Hints Used:    ${C_CYAN}%d total hints revealed${C_RESET}\n" "$total_hints"
+    printf "  Total Checks:  ${C_MAGENTA}%d test runs${C_RESET}\n" "$total_attempts"
+    echo -e "${C_MUTED}─────────────────────────────────────────────────────────────────────────────${C_RESET}"
+    echo ""
+}
+
+cmd_cheat() {
+    local cheat_file="/opt/dojo/CHEATSHEET.md"
+    if [[ ! -f "$cheat_file" ]]; then
+        cheat_file="${SCRIPT_DIR}/../../CHEATSHEET.md"
+    fi
+
+    if [[ ! -f "$cheat_file" ]]; then
+        die "CHEATSHEET.md not found."
+    fi
+
+    local topic="${1:-}"
+    if [[ -n "$topic" ]]; then
+        # Search for section matching topic
+        local section
+        section=$(awk -v t="$topic" '
+            BEGIN { IGNORECASE=1; printing=0 }
+            /^##+ / {
+                if (printing) exit;
+                if ($0 ~ t) { printing=1 }
+            }
+            printing { print }
+        ' "$cheat_file")
+
+        if [[ -n "$section" ]]; then
+            render_markdown_string "$section"
+            return
+        fi
+        echo -e "${C_YELLOW}Topic '${topic}' not found in cheatsheet. Showing full cheatsheet...${C_RESET}"
+    fi
+
+    render_markdown "$cheat_file"
+}
+
+# Main command dispatcher
+main() {
+    if [[ $# -eq 0 ]]; then
+        usage
+        exit 0
+    fi
+
+    local subcommand="$1"
+    shift
+
+    case "$subcommand" in
+        list)
+            cmd_list "$@"
+            ;;
+        start)
+            cmd_start "$@"
+            ;;
+        check)
+            cmd_check "$@"
+            ;;
+        hint)
+            cmd_hint "$@"
+            ;;
+        solution)
+            cmd_solution "$@"
+            ;;
+        reset)
+            cmd_reset "$@"
+            ;;
+        progress)
+            cmd_progress "$@"
+            ;;
+        cheat)
+            cmd_cheat "$@"
+            ;;
+        help|--help|-h)
+            usage
+            ;;
+        *)
+            die "Unknown command: '$subcommand'. Run 'dojo help' for available commands."
+            ;;
+    esac
+}
+
+main "$@"

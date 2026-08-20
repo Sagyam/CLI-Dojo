@@ -1,0 +1,90 @@
+name: CLI Dojo CI Test Suite
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: cli-dojo:latest
+          outputs: type=docker,dest=/tmp/cli-dojo.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Upload Docker Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/cli-dojo.tar
+          retention-days: 1
+
+  lint-and-smoke:
+    name: Lint & Smoke Checks
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Docker Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker Image
+        run: docker load -i /tmp/cli-dojo.tar
+
+      - name: Run ShellCheck Linting
+        run: make shellcheck
+
+      - name: Run Bats Syntax Check
+        run: make bats-check
+
+      - name: Smoke Test (Container Boot & List)
+        run: |
+          docker run --rm cli-dojo:latest dojo list
+
+  matrix-test:
+    name: Matrix Test
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        exercise: [
+          "00", "01", "02", "03", "04",
+          "05", "06", "07", "08", "09",
+          "10", "11", "12", "13", "14",
+          "15", "16", "17", "18", "19",
+          "20"
+        ]
+        seed: [42, 1337, 2026, 9999, 54321]
+    steps:
+      - name: Download Docker Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker Image
+        run: docker load -i /tmp/cli-dojo.tar
+
+      - name: Run Exercise ${{ matrix.exercise }} on Seed ${{ matrix.seed }}
+        run: |
+          docker run --rm cli-dojo:latest /opt/dojo/ci/run-exercise-ci.sh ${{ matrix.exercise }} ${{ matrix.seed }}

@@ -1,0 +1,13 @@
+services:
+  dojo:
+    build: .
+    image: cli-dojo:latest
+    container_name: cli-dojo
+    hostname: yetilink-ops-01
+    volumes:
+      - dojo-home:/home/student
+    stdin_open: true
+    tty: true
+
+volumes:
+  dojo-home:
