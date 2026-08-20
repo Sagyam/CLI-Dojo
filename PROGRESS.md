@@ -6,9 +6,9 @@ This document tracks the implementation progress of the CLI Dojo project accordi
 
 ## 📊 Summary
 
-- **Overall Status:** Milestone 3 In Progress (Tier 3 Complete, Tier 4 Next)
-- **Completed Exercises:** 14 / 21
-- **CI Test Suite:** 70 / 105 matrix cells passed
+- **Overall Status:** Complete (All Milestones M1–M4 Done, All 21 Exercises Ready)
+- **Completed Exercises:** 21 / 21
+- **CI Test Suite:** 105 / 105 matrix cells passed
 
 ---
 
@@ -42,20 +42,20 @@ This document tracks the implementation progress of the CLI Dojo project accordi
 - [x] `11-sed` (The Datacenter Move)
 - [x] `12-awk` (The Latency Ledger)
 - [x] `13-log-capstone` (The 3 AM Access Log)
-- [ ] `14-archives` (Restore From the Vault)
-- [ ] `15-curl-jq` (Talking to the Customer API)
-- [ ] `16-env-path` (The Missing Deploy Tool)
-- [ ] `17-users-groups` (The Account Audit)
-- [ ] `18-networking` (Who's Listening?)
-- [ ] `19-disk` (The 92% Root Partition)
-- [ ] M3 CI Validation (Green on Exercises 00–19 across 5 seeds)
+- [x] `14-archives` (Restore From the Vault)
+- [x] `15-curl-jq` (Talking to the Customer API)
+- [x] `16-env-path` (The Missing Deploy Tool)
+- [x] `17-users-groups` (The Account Audit)
+- [x] `18-networking` (Who's Listening?)
+- [x] `19-disk` (The 92% Root Partition)
+- [x] M3 CI Validation (Green on Exercises 00–19 across 5 seeds)
 
 ### Milestone 4 (M4) — Finale, Cheatsheet & Polish
-- [ ] `20-finale` (The Pager Goes Off)
-- [ ] `CHEATSHEET.md` (5 tiers + interview one-liners)
-- [ ] `README.md` (Student & instructor quickstart)
-- [ ] Full Matrix Test Suite (21 exercises × 5 seeds = 105 passed)
-- [ ] ShellCheck & Bats syntax validation across repository
+- [x] `20-finale` (The Pager Goes Off)
+- [x] `CHEATSHEET.md` (5 tiers + interview one-liners)
+- [x] `README.md` (Student & instructor quickstart)
+- [x] Full Matrix Test Suite (21 exercises × 5 seeds = 105 passed)
+- [x] ShellCheck & Bats syntax validation across repository
 
 ---
 
@@ -77,10 +77,10 @@ This document tracks the implementation progress of the CLI Dojo project accordi
 | 11 | `sed` | 3 | 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
 | 12 | `awk` | 3 | 2 + 3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
 | 13 | `log-capstone` | 3 | 2 + 3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
-| 14 | `archives` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 15 | `curl-jq` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 16 | `env-path` | 4 | 1 (Shell) | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 17 | `users-groups` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 18 | `networking` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 19 | `disk` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 20 | `finale` | Finale | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| 14 | `archives` | 4 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 15 | `curl-jq` | 4 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 16 | `env-path` | 4 | 1 (Shell) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 17 | `users-groups` | 4 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 18 | `networking` | 4 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 19 | `disk` | 4 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 20 | `finale` | Finale | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
