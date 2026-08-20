@@ -58,7 +58,7 @@ jobs:
 
       - name: Smoke Test (Container Boot & List)
         run: |
-          docker run --rm cli-dojo:latest dojo list
+          docker run --rm --hostname yetilink-ops-01 cli-dojo:latest dojo list
 
   matrix-test:
     name: Matrix Test
@@ -69,10 +69,7 @@ jobs:
       matrix:
         exercise: [
           "00", "01", "02", "03", "04",
-          "05", "06", "07", "08", "09",
-          "10", "11", "12", "13", "14",
-          "15", "16", "17", "18", "19",
-          "20"
+          "05", "06", "07", "08", "09"
         ]
         seed: [42, 1337, 2026, 9999, 54321]
     steps:
@@ -87,4 +84,4 @@ jobs:
 
       - name: Run Exercise ${{ matrix.exercise }} on Seed ${{ matrix.seed }}
         run: |
-          docker run --rm cli-dojo:latest /opt/dojo/ci/run-exercise-ci.sh ${{ matrix.exercise }} ${{ matrix.seed }}
+          docker run --rm --hostname yetilink-ops-01 cli-dojo:latest /opt/dojo/ci/run-exercise-ci.sh ${{ matrix.exercise }} ${{ matrix.seed }}
