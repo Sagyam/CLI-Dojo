@@ -1,0 +1,8 @@
+customer_id,name,plan,gb_used
+CUST-01,Alpha,starter,900
+CUST-02,Beta,pro,800
+CUST-03,Gamma,ultra,700
+CUST-04,Delta,enterprise,600
+CUST-05,Epsilon,pro,500
+CUST-06,Zeta,starter,500
+CUST-07,Eta,ultra,100

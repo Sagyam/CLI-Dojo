@@ -6,9 +6,9 @@ This document tracks the implementation progress of the CLI Dojo project accordi
 
 ## 📊 Summary
 
-- **Overall Status:** Milestone 2 Complete (Starting Milestone 3: Tiers 3 & 4)
-- **Completed Exercises:** 10 / 21
-- **CI Test Suite:** 50 / 105 matrix cells passed
+- **Overall Status:** Milestone 3 In Progress (Tier 3 Complete, Tier 4 Next)
+- **Completed Exercises:** 14 / 21
+- **CI Test Suite:** 70 / 105 matrix cells passed
 
 ---
 
@@ -38,10 +38,10 @@ This document tracks the implementation progress of the CLI Dojo project accordi
 - [x] M2 CI Validation (Green on Exercises 00–09 across 5 seeds)
 
 ### Milestone 3 (M3) — Tiers 3 & 4 (Exercises 10–19)
-- [ ] `10-columns` (Top Talkers)
-- [ ] `11-sed` (The Datacenter Move)
-- [ ] `12-awk` (The Latency Ledger)
-- [ ] `13-log-capstone` (The 3 AM Access Log)
+- [x] `10-columns` (Top Talkers)
+- [x] `11-sed` (The Datacenter Move)
+- [x] `12-awk` (The Latency Ledger)
+- [x] `13-log-capstone` (The 3 AM Access Log)
 - [ ] `14-archives` (Restore From the Vault)
 - [ ] `15-curl-jq` (Talking to the Customer API)
 - [ ] `16-env-path` (The Missing Deploy Tool)
@@ -73,10 +73,10 @@ This document tracks the implementation progress of the CLI Dojo project accordi
 | 07 | `pipes` | 2 | 1 + 2 + 3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
 | 08 | `permissions` | 2 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
 | 09 | `processes` | 2 | 1 + 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
-| 10 | `columns` | 3 | 2 + 3 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 11 | `sed` | 3 | 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 12 | `awk` | 3 | 2 + 3 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| 13 | `log-capstone` | 3 | 2 + 3 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
+| 10 | `columns` | 3 | 2 + 3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 11 | `sed` | 3 | 2 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 12 | `awk` | 3 | 2 + 3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
+| 13 | `log-capstone` | 3 | 2 + 3 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ (5/5) |
 | 14 | `archives` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | 15 | `curl-jq` | 4 | 1 + 2 | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
 | 16 | `env-path` | 4 | 1 (Shell) | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
