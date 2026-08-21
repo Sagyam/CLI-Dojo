@@ -4,6 +4,8 @@
 export EDITOR=nvim
 export VISUAL=nvim
 export PAGER=less
+export LESS="-R -F -X"
+export BAT_PAGING="never"
 export LANG=C.UTF-8
 export LC_ALL=C.UTF-8
 export TZ=UTC

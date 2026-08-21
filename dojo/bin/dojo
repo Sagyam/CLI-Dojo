@@ -11,29 +11,29 @@ source "${LIB_DIR}/common.sh"
 
 render_markdown() {
     local file="$1"
-    if command -v glow >/dev/null 2>&1; then
-        if [[ -t 1 ]]; then
-            glow -p "$file" || glow "$file" || cat "$file"
-        else
-            glow "$file" || cat "$file"
-        fi
+    if command -v mdcat >/dev/null 2>&1; then
+        mdcat -l "$file"
+    elif command -v batcat >/dev/null 2>&1; then
+        batcat --paging=never --style=plain -l markdown "$file"
+    elif command -v bat >/dev/null 2>&1; then
+        bat --paging=never --style=plain -l markdown "$file"
+    elif command -v glow >/dev/null 2>&1; then
+        glow "$file"
     else
-        if [[ -t 1 ]] && command -v less >/dev/null 2>&1; then
-            less -R "$file"
-        else
-            cat "$file"
-        fi
+        cat "$file"
     fi
 }
 
 render_markdown_string() {
     local content="$1"
-    if command -v glow >/dev/null 2>&1; then
-        if [[ -t 1 ]]; then
-            echo "$content" | glow -p || echo "$content" | glow || echo "$content"
-        else
-            echo "$content" | glow || echo "$content"
-        fi
+    if command -v mdcat >/dev/null 2>&1; then
+        echo "$content" | mdcat -l -
+    elif command -v batcat >/dev/null 2>&1; then
+        echo "$content" | batcat --paging=never --style=plain -l markdown
+    elif command -v bat >/dev/null 2>&1; then
+        echo "$content" | bat --paging=never --style=plain -l markdown
+    elif command -v glow >/dev/null 2>&1; then
+        echo "$content" | glow -
     else
         echo "$content"
     fi

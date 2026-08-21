@@ -4,7 +4,9 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=UTC \
     LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+    LC_ALL=C.UTF-8 \
+    LESS="-R -F -X" \
+    PAGER=less
 
 # 1. Unminimize Ubuntu to restore real manpages & documentation
 RUN yes | unminimize
@@ -28,11 +30,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 3. Install Starship prompt (pinned binary install)
 RUN curl -sS https://starship.rs/install.sh | sh -s -- -y --version v1.22.1
 
-# 4. Install Glow (terminal markdown renderer)
+# 4. Install mdcat (terminal markdown renderer) and configure bat
 RUN ARCH="$(dpkg --print-architecture)" && \
-    curl -fsSL "https://github.com/charmbracelet/glow/releases/download/v2.0.0/glow_2.0.0_${ARCH}.deb" -o /tmp/glow.deb && \
-    dpkg -i /tmp/glow.deb && \
-    rm /tmp/glow.deb
+    if [ "$ARCH" = "amd64" ]; then \
+        curl -fsSL "https://github.com/swsnr/mdcat/releases/download/mdcat-2.7.1/mdcat-2.7.1-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/mdcat.tar.gz && \
+        tar -xzf /tmp/mdcat.tar.gz -C /tmp && \
+        mv /tmp/mdcat-2.7.1-x86_64-unknown-linux-gnu/mdcat /usr/local/bin/mdcat && \
+        chmod +x /usr/local/bin/mdcat && \
+        rm -rf /tmp/mdcat*; \
+    fi && \
+    ln -sf /usr/bin/batcat /usr/local/bin/bat
 
 # 5. Install BATS (core, support, assert, file) pinned in /opt/bats/
 RUN mkdir -p /opt/bats && \
